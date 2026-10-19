@@ -7,7 +7,6 @@ extern "C" {
 #endif
 
 #define CFG_TUSB_MCU            OPT_MCU_RP2040
-#define CFG_TUSB_OS             OPT_OS_NONE
 #define CFG_TUSB_DEBUG          0
 #define CFG_TUSB_DEBUG_PRINTF   printf
 

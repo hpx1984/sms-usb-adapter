@@ -29,9 +29,6 @@ typedef struct {
   bool u, d, l, r, b1, b2;
 } sms_state_t;
 
-#define MAX_REPORT 64
-static uint8_t report_buf[MAX_REPORT];
-
 // 玩家分配表: dev_addr -> 玩家号 (0 = 未分配)
 static uint8_t player_of_addr[CFG_TUH_DEVICE_MAX + 1];
 
@@ -130,8 +127,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance,
   printf("HID mounted: addr=%d -> P%d\n", dev_addr, player_of_addr[dev_addr]);
 
   // 尝试切到 Boot Protocol (多数手柄支持; 不支持会自动回退)
-  tuh_hid_set_protocol(dev_addr, instance, HID_ITF_PROTOCOL_BOOT);
-  tuh_hid_receive_report(dev_addr, instance, report_buf, sizeof(report_buf));
+  tuh_hid_set_protocol(dev_addr, instance, HID_PROTOCOL_BOOT);
+  tuh_hid_receive_report(dev_addr, instance);
 }
 
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance) {
@@ -144,7 +141,7 @@ void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance) {
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance,
                                 uint8_t const *report, uint16_t len) {
   handle_report(dev_addr, report, len);
-  tuh_hid_receive_report(dev_addr, instance, report_buf, sizeof(report_buf));
+  tuh_hid_receive_report(dev_addr, instance);
 }
 
 // ---------------- Main: 原生 USB 口做 Host ----------------
@@ -153,7 +150,7 @@ int main(void) {
 
   // 调试串口 UART1: TX = GP20 (RX 不用接)
   uart_init(DEBUG_UART, 115200);
-  uart_set_tx(DEBUG_UART, DEBUG_TX_PIN);
+  gpio_set_function(DEBUG_TX_PIN, GPIO_FUNC_UART);
 
   // SMS 输出脚: 初始全部为高阻(输入) = 无按键按下
   for (int i = 0; i < 6; i++) {
