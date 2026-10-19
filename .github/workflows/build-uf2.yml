@@ -1,0 +1,31 @@
+name: build-uf2
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+
+      - name: Fetch pico-sdk (with tinyusb)
+        run: |
+          git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git $HOME/pico-sdk
+          cd $HOME/pico-sdk
+          git submodule update --init lib/tinyusb
+
+      - name: Build
+        run: |
+          mkdir build && cd build
+          PICO_SDK_PATH=$HOME/pico-sdk cmake ..
+          make -j$(nproc)
+
+      - name: Upload UF2
+        uses: actions/upload-artifact@v4
+        with:
+          name: sms_usb_adapter_uf2
+          path: build/sms_usb_adapter.uf2
